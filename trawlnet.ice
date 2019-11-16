@@ -6,4 +6,7 @@ module TrawlNet {
   interface Orchestrator {
     string downloadTask(string url);
   };
+  interface Printer {
+    void write(string message);
+  };
 };
