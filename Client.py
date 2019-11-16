@@ -7,17 +7,16 @@ Ice.loadSlice('trawlnet.ice')
 import TrawlNet
 
 
-
 class Client(Ice.Application):
     def run(self, argv):
         proxy = self.communicator().stringToProxy(argv[1])
-        url = self.communicator().stringToProxy(argv[2])
-        printer = TrawlNet.PrinterPrx.checkedCast(proxy)
+        url = argv[2]
+        msg = TrawlNet.OrchestratorPrx.checkedCast(proxy)
 
-        if not printer:
+        if not msg:
             raise RuntimeError('Invalid proxy')
 
-        printer.write(url)
+        msg.downloadTask(url)
 
         return 0
 
