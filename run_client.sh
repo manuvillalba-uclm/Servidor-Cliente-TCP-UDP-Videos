@@ -1,5 +1,5 @@
 #!/usr/bash
-echo $#
+
 if [ "$#" != 1 ]; then
   echo "Formato incorrecto. El script tiene el formato: run_client.sh <URL>"
   exit
