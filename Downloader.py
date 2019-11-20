@@ -58,7 +58,7 @@ class Download1(TrawlNet.Downloader):
     n = 0
 
     def addDownloadTask(self, message, current=None):
-        print("{0}: {1}".format(self.n, message))
+        print("Downloader {0}: {1}".format(self.n, message))
         sys.stdout.flush()
         self.n += 1
         download_mp3(message, "")

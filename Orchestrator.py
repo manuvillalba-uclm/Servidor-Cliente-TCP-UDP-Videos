@@ -14,7 +14,7 @@ class Orchestrator1(TrawlNet.Orchestrator, Ice.Application):
     n = 0
 
     def downloadTask(self, message, current=None):
-        print("{0}: {1}".format(self.n, message))
+        print("Orchestator {0}: {1}".format(self.n, message))
         sys.stdout.flush()
         self.n += 1
 
