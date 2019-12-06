@@ -16,8 +16,9 @@ class Client(Ice.Application):
         if not msg:
             raise RuntimeError('Invalid proxy')
 
-        msg.downloadTask(url)
-
+        val = msg.downloadTask(url)
+        print(val.name)
+        print(val.hash)
         return 0
 
 

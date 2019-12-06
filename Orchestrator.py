@@ -21,7 +21,9 @@ class Orchestrator1(TrawlNet.Orchestrator, Ice.Application):
 
         proxy = Server.communicator().stringToProxy(prx)
         msg = TrawlNet.DownloaderPrx.checkedCast(proxy)
-        msg.addDownloadTask(message)
+        val = msg.addDownloadTask(message)
+        return val
+
 
 class Server(Ice.Application):
 

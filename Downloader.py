@@ -61,7 +61,11 @@ class Download1(TrawlNet.Downloader):
         print("Downloader {0}: {1}".format(self.n, message))
         sys.stdout.flush()
         self.n += 1
-        download_mp3(message, "")
+        #download_mp3(message, "")
+        val = TrawlNet.FileInfo()
+        val.name = "Buenas tardes"
+        val.hash = "Buenas noches"
+        return val
 
 
 
