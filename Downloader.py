@@ -3,6 +3,7 @@
 import os
 import sys
 import Ice
+import IceStorm
 
 Ice.loadSlice('trawlnet.ice')
 
@@ -53,24 +54,54 @@ def download_mp3(url, destination='./'):
     return filename + options['postprocessors'][0]['preferredcodec']
 
 
-
-class Download1(TrawlNet.Downloader):
+class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
     n = 0
 
     def addDownloadTask(self, message, current=None):
         print("Downloader {0}: {1}".format(self.n, message))
         sys.stdout.flush()
         self.n += 1
-        #download_mp3(message, "")
+        # download_mp3(message, "")
         val = TrawlNet.FileInfo()
         val.name = "Buenas tardes"
         val.hash = "Buenas noches"
+        events.newFile(val)
         return val
 
 
-
 class Server(Ice.Application):
+    def get_topic_manager(self):
+        key = 'IceStorm.TopicManager.Proxy'
+        proxy = self.communicator().propertyToProxy(key)
+        if proxy is None:
+            print("property {} not set".format(key))
+            return None
+
+        print("Using IceStorm in: '%s'" % key)
+        return IceStorm.TopicManagerPrx.checkedCast(proxy)
+
     def run(self, argv):
+        global events
+        topic_mgr = self.get_topic_manager()
+        if not topic_mgr:
+            print('Invalid proxy')
+            sys.exit()
+
+        topic_name = "UpdateEvents"
+        try:
+            topic = topic_mgr.retrieve(topic_name)
+        except IceStorm.NoSuchTopic:
+            print("no such topic found, creating")
+            topic = topic_mgr.create(topic_name)
+
+        publisher = topic.getPublisher()
+        events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher)
+
+        val = TrawlNet.FileInfo()
+        val.name = "Buenas tardes"
+        val.hash = "Buenas noches"
+        events.newFile(val)
+
         broker = self.communicator()
         servant = Download1()
 
@@ -79,6 +110,8 @@ class Server(Ice.Application):
 
         print(proxy)
         sys.stdout.flush()
+
+
 
         adapter.activate()
         self.shutdownOnInterrupt()
