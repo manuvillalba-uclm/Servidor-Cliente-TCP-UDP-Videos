@@ -10,7 +10,7 @@ Ice.loadSlice('trawlnet.ice')
 import TrawlNet
 
 
-class Orchestrator1(TrawlNet.Orchestrator, Ice.Application):
+class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.UpdateEvent, Ice.Application):
     n = 0
 
     def downloadTask(self, message, current=None):

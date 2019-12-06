@@ -97,11 +97,6 @@ class Server(Ice.Application):
         publisher = topic.getPublisher()
         events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher)
 
-        val = TrawlNet.FileInfo()
-        val.name = "Buenas tardes"
-        val.hash = "Buenas noches"
-        events.newFile(val)
-
         broker = self.communicator()
         servant = Download1()
 
@@ -110,8 +105,6 @@ class Server(Ice.Application):
 
         print(proxy)
         sys.stdout.flush()
-
-
 
         adapter.activate()
         self.shutdownOnInterrupt()
