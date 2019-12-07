@@ -28,9 +28,18 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
         print(val.hash)
 
     def hello (self, me, current = None):
-        #print(me)
 
+        print("Hola a todos, soy {}".format(me))
 
+        anunciador = TrawlNet.OrchestratorPrx.checkedCast(me)
+
+        if not anunciador:
+            raise RuntimeError('Invalid proxy')
+
+        anunciador.announce(miProxy)
+
+    def announce(self, otro,current = None ):
+        print("Encantado, soy {}".format(otro))
 
 
 class Orchestrator(Ice.Application):
@@ -46,7 +55,8 @@ class Orchestrator(Ice.Application):
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):
-        global sync
+        global anunciador
+        global miProxy
 
         topic_mgr = self.get_topic_manager()
         if not topic_mgr:
@@ -81,8 +91,11 @@ class Orchestrator(Ice.Application):
 
         publisher = topic2.getPublisher()
         sync = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisher)
-        me = TrawlNet.OrchestratorPrx.checkedCast(proxy)
-        sync.hello(me) #Saludar a los Orchestrator
+        anunciador = TrawlNet.OrchestratorPrx.uncheckedCast(publisher)
+
+        miProxy = TrawlNet.OrchestratorPrx.checkedCast(proxy)
+        sync.hello(miProxy) #Saludar a los Orchestrator
+
         #ME SUBSCRIBO DESPUÉS DE ENVIAR MI HELLO PARA QUE NO ME LLEGUE A MI
         topic2.subscribeAndGetPublisher(qos2, subscriber)
         print("Waiting SyncEvents... '{}'".format(subscriber))
