@@ -4,6 +4,7 @@ import os
 import sys
 import Ice
 import IceStorm
+import hashlib
 
 Ice.loadSlice('trawlnet.ice')
 
@@ -62,9 +63,10 @@ class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
         sys.stdout.flush()
         self.n += 1
         # download_mp3(message, "")
+        result = hashlib.md5(message.encode())
         val = TrawlNet.FileInfo()
-        val.name = "Buenas tardes"
-        val.hash = "Buenas noches"
+        val.name =message
+        val.hash =result.hexdigest()
         events.newFile(val)
         return val
 

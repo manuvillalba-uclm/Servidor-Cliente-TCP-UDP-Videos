@@ -24,8 +24,9 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
         return val
 
     def newFile(self,val,current=None):
-        print("Me ha llegado por subcripcion {}".format(val.name))
-        print(val.hash)
+        print("Me ha llegado por subcripcion {0}, {1}".format(val.name,val.hash))
+        print(self.lista)
+
 
     def hello (self, me, current = None):
 
@@ -55,7 +56,6 @@ class Orchestrator(Ice.Application):
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):
-        global anunciador
         global miProxy
 
         topic_mgr = self.get_topic_manager()
