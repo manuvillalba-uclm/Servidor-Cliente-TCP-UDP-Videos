@@ -10,23 +10,31 @@ Ice.loadSlice('trawlnet.ice')
 import TrawlNet
 
 
-class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.UpdateEvent, Ice.Application):
+class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.UpdateEvent, Ice.Application):
     n = 0
 
     def downloadTask(self, message, current=None):
         print("Orchestator {0}: {1}".format(self.n, message))
         sys.stdout.flush()
         self.n += 1
-
+        # comprobar primero que el fichero ya exista
         proxy = Orchestrator.communicator().stringToProxy(prx)
         msg = TrawlNet.DownloaderPrx.checkedCast(proxy)
         val = msg.addDownloadTask(message)
         return val
+
     def newFile(self,val,current=None):
         print("Me ha llegado por subcripcion {}".format(val.name))
         print(val.hash)
 
+    def hello (self, me, current = None):
+        #print(me)
+
+
+
+
 class Orchestrator(Ice.Application):
+
     def get_topic_manager(self):
         key = 'IceStorm.TopicManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
@@ -38,29 +46,46 @@ class Orchestrator(Ice.Application):
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):
+        global sync
+
         topic_mgr = self.get_topic_manager()
         if not topic_mgr:
             print("Invalid proxy")
             return 2
 
-
         broker = self.communicator()
         servant = Orchestrator1()
-
 
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
         proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
         subscriber = adapter.addWithUUID(servant)
 
-        topic_name = "UpdateEvents"
+        #CANAL UPDATE EVENTS
+        topic_name1 = "UpdateEvents"
         qos = {}
         try:
-            topic = topic_mgr.retrieve(topic_name)
+            topic1 = topic_mgr.retrieve(topic_name1)
         except IceStorm.NoSuchTopic:
-            topic = topic_mgr.create(topic_name)
+            topic1 = topic_mgr.create(topic_name1)
 
-        topic.subscribeAndGetPublisher(qos, subscriber)
-        print("Waiting events... '{}'".format(subscriber))
+        topic1.subscribeAndGetPublisher(qos, subscriber)
+        print("Waiting UpadteEvents... '{}'".format(subscriber))
+
+        #CANAL ORCHESTRATOR SYNC
+        topic_name2 = "OrchestratorSync"
+        qos2 = {}
+        try:
+            topic2 = topic_mgr.retrieve(topic_name2)
+        except IceStorm.NoSuchTopic:
+            topic2 = topic_mgr.create(topic_name2)
+
+        publisher = topic2.getPublisher()
+        sync = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisher)
+        me = TrawlNet.OrchestratorPrx.checkedCast(proxy)
+        sync.hello(me) #Saludar a los Orchestrator
+        #ME SUBSCRIBO DESPUÉS DE ENVIAR MI HELLO PARA QUE NO ME LLEGUE A MI
+        topic2.subscribeAndGetPublisher(qos2, subscriber)
+        print("Waiting SyncEvents... '{}'".format(subscriber))
 
         print(proxy)
         sys.stdout.flush()
@@ -69,8 +94,8 @@ class Orchestrator(Ice.Application):
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
 
-        topic.unsubscribe(subscriber)
-
+        topic1.unsubscribe(subscriber)
+        topic2.unsubscribe(subscriber)
 
         return 0
 
