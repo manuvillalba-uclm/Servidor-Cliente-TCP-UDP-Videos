@@ -1,7 +1,8 @@
-#!/usr/bash
+#!/bin/sh
+#
 
-if [ "$#" != 1 ]; then
-  echo "Formato incorrecto. El script tiene el formato: run_client.sh <URL>"
-  exit
-fi
-python3 Client.py "$(head -1 proxy_orch.out)" "$1"
+PYTHON=python3
+
+CLIENT_CONFIG=server.config
+
+$PYTHON client.py --Ice.Config=$CLIENT_CONFIG "$1" "$2"

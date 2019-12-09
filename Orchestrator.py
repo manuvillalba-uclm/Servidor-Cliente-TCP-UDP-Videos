@@ -30,13 +30,9 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
         self.FileList.append(val)
         print(self.FileList)
 
-
     def hello (self, me, current = None):
-
         print("Hola a todos, soy {}".format(me))
-
         anunciador = TrawlNet.OrchestratorPrx.checkedCast(me)
-
         if not anunciador:
             raise RuntimeError('Invalid proxy')
 
@@ -44,6 +40,9 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
 
     def announce(self, otro,current = None ):
         print("Encantado, soy {}".format(otro))
+
+    def getFileList(self, current = None):
+        return self.FileList
 
 
 class Orchestrator(Ice.Application):

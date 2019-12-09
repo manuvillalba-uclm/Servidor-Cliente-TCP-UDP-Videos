@@ -8,6 +8,8 @@ import TrawlNet
 
 
 class Client(Ice.Application):
+    FileList = []
+
     def run(self, argv):
         proxy = self.communicator().stringToProxy(argv[1])
         url = argv[2]
@@ -19,6 +21,10 @@ class Client(Ice.Application):
         val = msg.downloadTask(url)
         print(val.name)
         print(val.hash)
+
+        self.FileList = msg.getFileList()
+        print(self.FileList)
+
         return 0
 
 
