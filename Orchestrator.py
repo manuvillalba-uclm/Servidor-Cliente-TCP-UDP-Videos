@@ -13,6 +13,8 @@ import TrawlNet
 class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.UpdateEvent, Ice.Application):
     n = 0
 
+    FileList = []
+
     def downloadTask(self, message, current=None):
         print("Orchestator {0}: {1}".format(self.n, message))
         sys.stdout.flush()
@@ -25,7 +27,8 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
 
     def newFile(self,val,current=None):
         print("Me ha llegado por subcripcion {0}, {1}".format(val.name,val.hash))
-        print(self.lista)
+        self.FileList.append(val)
+        print(self.FileList)
 
 
     def hello (self, me, current = None):
