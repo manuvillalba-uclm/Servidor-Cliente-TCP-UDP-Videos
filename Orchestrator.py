@@ -37,6 +37,8 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
             raise RuntimeError('Invalid proxy')
 
         anunciador.announce(miProxy)
+        for i in self.FileList:
+            events.newFile(i)
 
     def announce(self, otro,current = None ):
         print("Encantado, soy {}".format(otro))
@@ -59,6 +61,7 @@ class Orchestrator(Ice.Application):
 
     def run(self, argv):
         global miProxy
+        global events
 
         topic_mgr = self.get_topic_manager()
         if not topic_mgr:
@@ -80,6 +83,8 @@ class Orchestrator(Ice.Application):
         except IceStorm.NoSuchTopic:
             topic1 = topic_mgr.create(topic_name1)
 
+        publisher1 = topic1.getPublisher()
+        events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher1)
         topic1.subscribeAndGetPublisher(qos, subscriber)
         print("Waiting UpadteEvents... '{}'".format(subscriber))
 
@@ -91,16 +96,13 @@ class Orchestrator(Ice.Application):
         except IceStorm.NoSuchTopic:
             topic2 = topic_mgr.create(topic_name2)
 
-        publisher = topic2.getPublisher()
-        sync = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisher)
-        anunciador = TrawlNet.OrchestratorPrx.uncheckedCast(publisher)
+        publisher2 = topic2.getPublisher()
+        sync = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisher2)
 
         miProxy = TrawlNet.OrchestratorPrx.checkedCast(proxy)
-        sync.hello(miProxy) #Saludar a los Orchestrator
-
-        #ME SUBSCRIBO DESPUÉS DE ENVIAR MI HELLO PARA QUE NO ME LLEGUE A MI
         topic2.subscribeAndGetPublisher(qos2, subscriber)
         print("Waiting SyncEvents... '{}'".format(subscriber))
+        sync.hello(miProxy) #Saludar a los Orchestrator
 
         print(proxy)
         sys.stdout.flush()
