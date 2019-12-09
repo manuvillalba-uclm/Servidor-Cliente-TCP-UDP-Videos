@@ -26,8 +26,9 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
         return val
 
     def newFile(self,val,current=None):
-        print("Me ha llegado por subcripcion {0}, {1}".format(val.name,val.hash))
-        self.FileList.append(val)
+        if val not in self.FileList:
+            print("Me ha llegado por subcripcion {0}, {1}".format(val.name, val.hash))
+            self.FileList.append(val)
         print(self.FileList)
 
     def hello (self, me, current = None):
