@@ -32,22 +32,32 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
 
 
     def hello (self, me, current = None):
-
-        print("Hola a todos, soy {}".format(me))
-
-        anunciador = TrawlNet.OrchestratorPrx.checkedCast(me)
-
+        print("Orchestrator joven: Hola a todos, soy {}".format(me))
+        anunciador = TrawlNet.OrchestratorPrx.checkedCast(me) #Establecer conexión con el otro Orchestatror
         if not anunciador:
             raise RuntimeError('Invalid proxy')
 
         anunciador.announce(miProxy)
+        #Obtener la lista de archivos descargados
+
 
     def announce(self, otro,current = None ):
-        print("Encantado, soy {}".format(otro))
+        print("Orchestrator Viejo: Encantado, soy {}".format(otro))
+        print("Orchestrator Joven: Pasame la lista de archivos para estar actualizado")
+        print(otro) #compruebo que el proxy es el del otro
+        getter = TrawlNet.OrchestratorPrx.checkedCast(otro) #Establecer conexión con el otro Orchestrator
+        if not getter:
+            raise RuntimeError('Invalid proxy')
+
+        fl = getter.getFileList() #ejecutar getFileList() en el otro Orchestrator para obtener su lista
+        print("Lista recibida")
+        print(fl)
+
+    def getFileList(self, current = None):
+        return self.FileList
 
 
 class Orchestrator(Ice.Application):
-
     def get_topic_manager(self):
         key = 'IceStorm.TopicManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
@@ -94,7 +104,6 @@ class Orchestrator(Ice.Application):
 
         publisher = topic2.getPublisher()
         sync = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisher)
-        anunciador = TrawlNet.OrchestratorPrx.uncheckedCast(publisher)
 
         miProxy = TrawlNet.OrchestratorPrx.checkedCast(proxy)
         sync.hello(miProxy) #Saludar a los Orchestrator
