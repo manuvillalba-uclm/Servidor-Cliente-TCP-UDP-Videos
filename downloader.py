@@ -81,7 +81,7 @@ class Server(Ice.Application):
             print("property {} not set".format(key))
             return None
 
-        print("Using IceStorm in: '%s'" % key)
+        #print("Using IceStorm in: '%s'" % key)
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):

@@ -11,7 +11,7 @@ $PYTHON downloader.py --Ice.Config=$DOWNLOADER_CONFIG>$PRX &
 PID=$!
 
 # Dejamos arrancar al downloader
-sleep 1
+sleep 2
 echo "Downloader: $(cat $PRX)"
 
 # Lanzamos el orchestrator

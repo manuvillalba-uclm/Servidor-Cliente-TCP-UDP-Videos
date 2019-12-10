@@ -29,7 +29,7 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
         if val not in self.FileList:
             print("Me ha llegado por subcripcion {0}, {1}".format(val.name, val.hash))
             self.FileList.append(val)
-        print(self.FileList)
+            print(self.FileList)
 
     def hello (self, me, current = None):
         print("Hola a todos, soy {}".format(me))
@@ -37,7 +37,9 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
         if not anunciador:
             raise RuntimeError('Invalid proxy')
 
-        anunciador.announce(miProxy)
+        if not me == miProxy :
+            anunciador.announce(miProxy)
+
         for i in self.FileList:
             events.newFile(i)
 
@@ -57,7 +59,7 @@ class Orchestrator(Ice.Application):
             print("property '{}' not set".format(key))
             return None
 
-        print("Using IceStorm in: '%s'" % key)
+        #print("Using IceStorm in: '%s'" % key)
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):
@@ -87,7 +89,7 @@ class Orchestrator(Ice.Application):
         publisher1 = topic1.getPublisher()
         events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher1)
         topic1.subscribeAndGetPublisher(qos, subscriber)
-        print("Waiting UpadteEvents... '{}'".format(subscriber))
+        #print("Waiting UpadteEvents... '{}'".format(subscriber))
 
         #CANAL ORCHESTRATOR SYNC
         topic_name2 = "OrchestratorSync"
@@ -102,7 +104,7 @@ class Orchestrator(Ice.Application):
 
         miProxy = TrawlNet.OrchestratorPrx.checkedCast(proxy)
         topic2.subscribeAndGetPublisher(qos2, subscriber)
-        print("Waiting SyncEvents... '{}'".format(subscriber))
+        #print("Waiting SyncEvents... '{}'".format(subscriber))
         sync.hello(miProxy) #Saludar a los Orchestrator
 
         print(proxy)
@@ -118,7 +120,7 @@ class Orchestrator(Ice.Application):
         return 0
 
 
-prx = sys.argv[1]
+prx = sys.argv[2]
 
 
 orchestrator = Orchestrator()
