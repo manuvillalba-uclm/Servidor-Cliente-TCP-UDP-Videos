@@ -122,6 +122,5 @@ class Orchestrator(Ice.Application):
 
 prx = sys.argv[2]
 
-
 orchestrator = Orchestrator()
 sys.exit(orchestrator.main(sys.argv))

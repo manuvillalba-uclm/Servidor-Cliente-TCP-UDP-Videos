@@ -63,7 +63,7 @@ class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
         print("Downloader {0}: {1}".format(self.n, message))
         sys.stdout.flush()
         self.n += 1
-        # download_mp3(message, "")
+        download_mp3(message, "")
         result = hashlib.md5(message.encode())
         val = TrawlNet.FileInfo()
         val.name =message
@@ -92,10 +92,10 @@ class Server(Ice.Application):
             sys.exit()
 
         topic_name = "UpdateEvents"
+
         try:
             topic = topic_mgr.retrieve(topic_name)
         except IceStorm.NoSuchTopic:
-            print("no such topic found, creating")
             topic = topic_mgr.create(topic_name)
 
         publisher = topic.getPublisher()

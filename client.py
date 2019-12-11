@@ -13,16 +13,14 @@ class Client(Ice.Application):
     def run(self, argv):
         proxy = self.communicator().stringToProxy(argv[1])
 
-        url = argv[2]
+
         msg = TrawlNet.OrchestratorPrx.checkedCast(proxy)
 
         if not msg:
             raise RuntimeError('Invalid proxy')
-        print(url)
-        if not url == "":
+        if not argv[2]=="":
+            url = argv[2]
             val = msg.downloadTask(url)
-            print(val.name)
-            print(val.hash)
         else:
             self.FileList = msg.getFileList()
             print(self.FileList)
