@@ -21,8 +21,11 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
         self.n += 1
         # comprobar primero que el fichero ya exista
         proxy = Orchestrator.communicator().stringToProxy(prx)
-        msg = TrawlNet.DownloaderPrx.checkedCast(proxy)
-        val = msg.addDownloadTask(message)
+
+        factory = TrawlNet.DownloaderFactoryPrx.checkedCast(proxy)
+        downloader = factory.create()
+        val = downloader.addDownloadTask(message)
+
         return val
 
     def newFile(self,val,current=None):

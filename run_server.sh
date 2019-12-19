@@ -7,7 +7,7 @@ DOWNLOADER_CONFIG=server.config
 ORCHESTRATOR_CONFIG=$DOWNLOADER_CONFIG
 
 PRX=$(tempfile)
-$PYTHON downloader.py --Ice.Config=$DOWNLOADER_CONFIG>$PRX &
+$PYTHON downloader_factory.py --Ice.Config=$DOWNLOADER_CONFIG>$PRX &
 PID=$!
 
 # Dejamos arrancar al downloader

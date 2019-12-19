@@ -69,6 +69,7 @@ def computeHash(filename):
 class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
 
     events = None
+    n = 0
 
     def addDownloadTask(self, message, current=None):
         print("Downloader {0}: {1}".format(self.n, message))
@@ -89,7 +90,7 @@ class DownloadFactory1(TrawlNet.DownloaderFactory):
         servant = Download1()
         proxy = current.adapter.addWithUUID(servant)
         print("New Downloader")
-        return TrawlNet.DownladerPrx.checkedCast(proxy)
+        return TrawlNet.DownloaderPrx.checkedCast(proxy)
 
 
 class Server(Ice.Application):

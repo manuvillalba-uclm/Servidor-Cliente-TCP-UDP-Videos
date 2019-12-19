@@ -58,7 +58,6 @@ def download_mp3(url, destination='./'):
 class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
     n = 0
 
-
     def addDownloadTask(self, message, current=None):
         print("Downloader {0}: {1}".format(self.n, message))
         sys.stdout.flush()
