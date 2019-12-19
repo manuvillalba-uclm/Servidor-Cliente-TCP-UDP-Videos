@@ -75,9 +75,9 @@ class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
         print("Downloader {0}: {1}".format(self.n, message))
         sys.stdout.flush()
         self.n += 1
-        filename = download_mp3(message, "")
+        filename = download_mp3(message, "./downloads/")
         val = TrawlNet.FileInfo()
-        val.name = message
+        val.name = filename
         val.hash = computeHash(filename)
 
         self.events.newFile(val)

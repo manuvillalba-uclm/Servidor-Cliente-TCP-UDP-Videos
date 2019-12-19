@@ -11,16 +11,13 @@ import TrawlNet
 
 
 class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.UpdateEvent, Ice.Application):
-    n = 0
 
     FileList = []
-
+    prxDownloader = None
+    prxTransfer = None
     def downloadTask(self, message, current=None):
-        print("Orchestator {0}: {1}".format(self.n, message))
-        sys.stdout.flush()
-        self.n += 1
         # comprobar primero que el fichero ya exista
-        proxy = Orchestrator.communicator().stringToProxy(prx)
+        proxy = Orchestrator.communicator().stringToProxy(self.prxDownloader)
 
         factory = TrawlNet.DownloaderFactoryPrx.checkedCast(proxy)
         downloader = factory.create()
@@ -51,6 +48,12 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
 
     def getFileList(self, current = None):
         return self.FileList
+
+    def getFile(self, name, current = None):
+        proxy = Orchestrator.communicator().stringToProxy(self.prxTransfer)
+        factory = TrawlNet.TransferFactoryPrx.checkedCast(proxy)
+        transfer = factory.create(name)
+        return transfer
 
 
 class Orchestrator(Ice.Application):
@@ -123,7 +126,8 @@ class Orchestrator(Ice.Application):
         return 0
 
 
-prx = sys.argv[2]
+Orchestrator1.prxDownloader = sys.argv[2]
+Orchestrator1.prxTransfer = sys.argv[3]
 
 orchestrator = Orchestrator()
 sys.exit(orchestrator.main(sys.argv))
