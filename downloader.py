@@ -54,20 +54,25 @@ def download_mp3(url, destination='./'):
     filename = filename[:filename.rindex('.') + 1]
     return filename + options['postprocessors'][0]['preferredcodec']
 
+def computeHash(filename):
+    '''SHA256 hash of a file'''
+    fileHash = hashlib.sha256()
+    with open(filename, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            fileHash.update(chunk)
+    return fileHash.hexdigest()
 
 class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
     n = 0
-
 
     def addDownloadTask(self, message, current=None):
         print("Downloader {0}: {1}".format(self.n, message))
         sys.stdout.flush()
         self.n += 1
-        download_mp3(message, "")
-        result = hashlib.md5(message.encode())
+        filename = download_mp3(message, "")
         val = TrawlNet.FileInfo()
-        val.name =message
-        val.hash =result.hexdigest()
+        val.name = message
+        val.hash = computeHash(filename)
 
         events.newFile(val)
         return val
