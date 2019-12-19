@@ -16,6 +16,7 @@ except ImportError:
     print('ERROR: do you have installed youtube-dl library?')
     sys.exit(1)
 
+
 class NullLogger:
     def debug(self, msg):
         pass
@@ -36,6 +37,7 @@ _YOUTUBEDL_OPTS_ = {
     'logger': NullLogger()
 }
 
+
 def download_mp3(url, destination='./'):
     '''
     Synchronous download from YouTube
@@ -55,25 +57,43 @@ def download_mp3(url, destination='./'):
     return filename + options['postprocessors'][0]['preferredcodec']
 
 
-class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
-    n = 0
+def computeHash(filename):
+    '''SHA256 hash of a file'''
+    fileHash = hashlib.sha256()
+    with open(filename, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            fileHash.update(chunk)
+    return fileHash.hexdigest()
 
+
+class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
+
+    events = None
 
     def addDownloadTask(self, message, current=None):
         print("Downloader {0}: {1}".format(self.n, message))
         sys.stdout.flush()
         self.n += 1
-        download_mp3(message, "")
-        result = hashlib.md5(message.encode())
+        filename = download_mp3(message, "")
         val = TrawlNet.FileInfo()
-        val.name =message
-        val.hash =result.hexdigest()
+        val.name = message
+        val.hash = computeHash(filename)
 
-        events.newFile(val)
+        self.events.newFile(val)
+
         return val
 
 
+class DownloadFactory1(TrawlNet.DownloaderFactory):
+    def create(self, current):
+        servant = Download1()
+        proxy = current.adapter.addWithUUID(servant)
+        print("New Downloader")
+        return TrawlNet.DownladerPrx.checkedCast(proxy)
+
+
 class Server(Ice.Application):
+
     def get_topic_manager(self):
         key = 'IceStorm.TopicManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
@@ -85,7 +105,8 @@ class Server(Ice.Application):
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):
-        global events
+
+        #Topic UpdateEvent
         topic_mgr = self.get_topic_manager()
         if not topic_mgr:
             print('Invalid proxy')
@@ -99,16 +120,19 @@ class Server(Ice.Application):
             topic = topic_mgr.create(topic_name)
 
         publisher = topic.getPublisher()
-        events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher)
+        
+        Download1.events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher)
 
+        #Proxy directo
         broker = self.communicator()
-        servant = Download1()
+        properties = broker.getProperties()
+        servant = DownloadFactory1()
 
         adapter = broker.createObjectAdapter("DownloaderAdapter")
-        proxy = adapter.add(servant, broker.stringToIdentity("downloader"))
+        downloader_id = properties.getProperty("DownloaderFactoryIdentity")
+        proxy = adapter.add(servant, broker.stringToIdentity("downloader_id_manual"))
 
-        print(proxy)
-        sys.stdout.flush()
+        print(proxy, flush=True)
 
         adapter.activate()
         self.shutdownOnInterrupt()
