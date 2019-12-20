@@ -133,7 +133,8 @@ class Server(Ice.Application):
         downloader_id = properties.getProperty("DownloaderFactoryIdentity")
         proxy = adapter.add(servant, broker.stringToIdentity("downloader_id_manual"))
 
-        print(proxy, flush=True)
+        print(proxy)
+        sys.stdout.flush()
 
         adapter.activate()
         self.shutdownOnInterrupt()
