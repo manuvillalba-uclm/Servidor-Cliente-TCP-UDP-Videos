@@ -106,9 +106,13 @@ class Server(Ice.Application):
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):
-
+        print("probando")
         #Topic UpdateEvent
-        topic_mgr = self.get_topic_manager()
+        #topic_mgr = self.get_topic_manager()
+
+        topic_manager = self.communicator().stringToProxy("YoutubeDownloaderApp.IceStorm/TopicManager")
+        topic_mgr = IceStorm.TopicManagerPrx.checkedCast(topic_manager)
+
         if not topic_mgr:
             print('Invalid proxy')
             sys.exit()

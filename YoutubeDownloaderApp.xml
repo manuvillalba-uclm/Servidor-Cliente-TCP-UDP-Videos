@@ -95,19 +95,13 @@
          <server id="DownloaderFactory" activation="manual" exe="./downloader_factory.py" pwd="${application.distrib}">
             <properties>
                <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
-               <property name="IceStorm.TopicManager.Proxy" value="IceStorm/TopicManager:tcp -p 10000"/>
             </properties>
             <adapter name="DownloaderAdapter" endpoints="tcp" id="${server}.DownloaderAdapter"/>
          </server>
       </node>
       <node name="registry-node">
          <server-instance template="IcePatch2" directory="/tmp/YoutubeDownloaderApp"/>
-         <server-instance template="IceStorm" topic-manager-endpoints="tcp -p 10000" publish-endpoints="tcp -p 2000" flush-timeout="2000">
-            <properties>
-               <property name="IceStormAdmin.TopicManager.Default" value="IceStorm/TopicManager:tcp -p 10000"/>
-               <property name="Freeze.DbEnv.IceStorm.DbHome" value="db"/>
-            </properties>
-         </server-instance>
+         <server-instance template="IceStorm"/>
       </node>
    </application>
 </icegrid>
