@@ -41,6 +41,18 @@
             <adapter name="${service}.TopicManager" endpoints="${topic-manager-endpoints}" id="${instance-name}${node-id}.TopicManager" replica-group="${topic-manager-replica-group}"/>
          </service>
       </service-template>
+      <server-template id="DownloaderFactoryTemplate">
+         <server id="DownloaderFactory" activation="on-demand" exe="./downloader_factory.py" pwd="${application.distrib}">
+            <properties>
+               <property name="Identity" value="downloaderFactory"/>
+               <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
+               <property name="Ice.ProgramName" value="${server}.DownloaderFactory"/>
+            </properties>
+            <adapter name="DownloaderAdapter" endpoints="default" id="${server}.DownloaderAdapter">
+               <object identity="downloaderFactory" type="::Trawlnet::DownloaderFactory" property="DownloaderFactoryIdentity"/>
+            </adapter>
+         </server>
+      </server-template>
       <server-template id="Glacier2">
          <parameter name="instance-name" default="${application}.Glacier2"/>
          <parameter name="client-endpoints"/>
@@ -91,21 +103,42 @@
             <service-instance template="IceStorm-HA" instance-name="${instance-name}" node-id="${node-id}" topic-manager-endpoints="${topic-manager-endpoints}" publish-endpoints="${publish-endpoints}" node-endpoints="${node-endpoints}" flush-timeout="${flush-timeout}" publish-replica-group="${publish-replica-group}" topic-manager-replica-group="${topic-manager-replica-group}"/>
          </icebox>
       </server-template>
-      <node name="downloads-node">
-         <server id="DownloaderFactory" activation="manual" exe="./downloader_factory.py" pwd="${application.distrib}">
+      <server-template id="OrchestratorTemplate">
+         <parameter name="index"/>
+         <server id="Orchestrator${index}" activation="on-demand" exe="./orchestrator.py" pwd="${application.distrib}">
             <properties>
-               <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
+               <property name="Ice.StdOut" value="${application.distrib}/server-out-${index}.txt"/>
+               <property name="Ice.ProgramName" value="${server}.Printer${index}"/>
             </properties>
-            <adapter name="DownloaderAdapter" endpoints="tcp" id="${server}.DownloaderAdapter"/>
+            <adapter name="OrchestratorAdapter" endpoints="default" id="${server}.OrchestratorAdapter" replica-group="OrchestratorReplicaGroup">
+               <object identity="orchestrator${index}" type="::Example::Orchestrator" property="Identity"/>
+            </adapter>
          </server>
+      </server-template>
+      <server-template id="TransferFactory">
+         <server id="TransferFactory" activation="on-demand" exe="./transfer_factory.py" pwd="${application.distrib}">
+            <properties>
+               <property name="Identity" value="transferFactory"/>
+               <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
+               <property name="Ice.ProgramName" value="${server}.TransferFactory"/>
+            </properties>
+            <adapter name="TransferAdapter" endpoints="default" id="${server}.TransferAdapter">
+               <object identity="transferFactory" type="::Trawlnet::TransferFactory" property="TransferFactoryIdentity"/>
+            </adapter>
+         </server>
+      </server-template>
+      <replica-group id="OrchestratorReplicaGroup">
+         <load-balancing type="random" n-replicas="0"/>
+         <object identity="orchestrator" type="::Trawlnet::Orchestrator"/>
+      </replica-group>
+      <node name="downloads-node">
+         <server-instance template="DownloaderFactoryTemplate"/>
+         <server-instance template="TransferFactory"/>
       </node>
       <node name="orchestrator-node">
-         <server id="OrchestratorServer" activation="manual" exe="./orchestrator.py" pwd="${application.distrib}">
-            <properties>
-               <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
-            </properties>
-            <adapter name="OrchestratorAdapter" endpoints="tcp" id="${server}.OrchestratorAdapter"/>
-         </server>
+         <server-instance template="OrchestratorTemplate" index="1"/>
+         <server-instance template="OrchestratorTemplate" index="2"/>
+         <server-instance template="OrchestratorTemplate" index="3"/>
       </node>
       <node name="registry-node">
          <server-instance template="IcePatch2" directory="/tmp/YoutubeDownloaderApp"/>

@@ -52,7 +52,7 @@ class Server(Ice.Application):
         servant = TransferFactoryI()
         adapter = ic.createObjectAdapter('TransferAdapter')
         factory_id = properties.getProperty('TransferFactoryIdentity')
-        proxy = adapter.add(servant, ic.stringToIdentity("factory_id_manual"))
+        proxy = adapter.add(servant, ic.stringToIdentity(factory_id))
 
         print('{}'.format(proxy), flush=True)
 

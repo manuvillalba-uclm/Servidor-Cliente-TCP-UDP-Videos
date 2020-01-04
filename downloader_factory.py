@@ -79,8 +79,10 @@ class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
         val = TrawlNet.FileInfo()
         val.name = filename
         val.hash = computeHash(filename)
-
         self.events.newFile(val)
+
+        print(self.events)
+        sys.stdout.flush()
 
         return val
 
@@ -89,7 +91,9 @@ class DownloadFactory1(TrawlNet.DownloaderFactory):
     def create(self, current):
         servant = Download1()
         proxy = current.adapter.addWithUUID(servant)
-        print("New Downloader")
+        print(proxy)
+        sys.stdout.flush()
+
         return TrawlNet.DownloaderPrx.checkedCast(proxy)
 
 
@@ -106,7 +110,6 @@ class Server(Ice.Application):
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):
-        print("probando")
         #Topic UpdateEvent
         topic_manager = self.communicator().stringToProxy("YoutubeDownloaderApp.IceStorm/TopicManager")
         topic_mgr = IceStorm.TopicManagerPrx.checkedCast(topic_manager)
@@ -132,8 +135,9 @@ class Server(Ice.Application):
         servant = DownloadFactory1()
 
         adapter = broker.createObjectAdapter("DownloaderAdapter")
+
         downloader_id = properties.getProperty("DownloaderFactoryIdentity")
-        proxy = adapter.add(servant, broker.stringToIdentity("downloader_id_manual"))
+        proxy = adapter.add(servant, broker.stringToIdentity(downloader_id))
 
         print(proxy)
         sys.stdout.flush()

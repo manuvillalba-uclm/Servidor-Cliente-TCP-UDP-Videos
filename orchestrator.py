@@ -18,8 +18,6 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
     prxTransfer = None
     def downloadTask(self, message, current=None):
         # comprobar primero que el fichero ya exista
-        print(self.prxDownloader)
-        #proxy = Orchestrator.communicator().stringToProxy(self.prxDownloader)
         proxy = self.prxDownloader
 
         factory = TrawlNet.DownloaderFactoryPrx.checkedCast(proxy)
@@ -31,23 +29,28 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
     def newFile(self,val,current=None):
         if val not in self.FileList:
             print("Me ha llegado por subcripcion {0}, {1}".format(val.name, val.hash))
+            sys.stdout.flush()
             self.FileList.append(val)
             print(self.FileList)
+            sys.stdout.flush()
 
     def hello (self, me, current = None):
         print("Hola a todos, soy {}".format(me))
+        sys.stdout.flush()
+        
         anunciador = TrawlNet.OrchestratorPrx.checkedCast(me)
         if not anunciador:
             raise RuntimeError('Invalid proxy')
-
-        if not me == miProxy :
+        if not me == miProxy:
             anunciador.announce(miProxy)
+            sys.stdout.flush()
 
         for i in self.FileList:
             events.newFile(i)
 
     def announce(self, otro,current = None ):
         print("Encantado, soy {}".format(otro))
+        sys.stdout.flush()
 
     def getFileList(self, current = None):
         return self.FileList
@@ -66,6 +69,7 @@ class Orchestrator(Ice.Application):
         proxy = self.communicator().propertyToProxy(key)
         if proxy is None:
             print("property '{}' not set".format(key))
+            sys.stdout.flush()
             return None
 
         #print("Using IceStorm in: '%s'" % key)
@@ -75,7 +79,7 @@ class Orchestrator(Ice.Application):
         global miProxy
         global events
 
-        Orchestrator1.prxDownloader = self.communicator().stringToProxy("downloader_id_manual@DownloaderFactory.DownloaderAdapter")
+        Orchestrator1.prxDownloader = self.communicator().stringToProxy("downloaderFactory@DownloaderFactory.DownloaderAdapter")
 
         topic_manager = self.communicator().stringToProxy("YoutubeDownloaderApp.IceStorm/TopicManager")
         topic_mgr = IceStorm.TopicManagerPrx.checkedCast(topic_manager)
@@ -88,7 +92,12 @@ class Orchestrator(Ice.Application):
         servant = Orchestrator1()
 
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
-        proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
+        #proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
+
+        indirect_proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
+        id_ = indirect_proxy.ice_getIdentity()
+        proxy = adapter.createDirectProxy(id_)
+
         subscriber = adapter.addWithUUID(servant)
 
         #CANAL UPDATE EVENTS
@@ -115,9 +124,11 @@ class Orchestrator(Ice.Application):
         publisher2 = topic2.getPublisher()
         sync = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisher2)
 
+
         miProxy = TrawlNet.OrchestratorPrx.checkedCast(proxy)
         topic2.subscribeAndGetPublisher(qos2, subscriber)
         #print("Waiting SyncEvents... '{}'".format(subscriber))
+
         sync.hello(miProxy) #Saludar a los Orchestrator
 
         print(proxy)
