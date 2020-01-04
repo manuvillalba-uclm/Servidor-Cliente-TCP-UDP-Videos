@@ -14,10 +14,13 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
 
     FileList = []
     prxDownloader = None
+
     prxTransfer = None
     def downloadTask(self, message, current=None):
         # comprobar primero que el fichero ya exista
-        proxy = Orchestrator.communicator().stringToProxy(self.prxDownloader)
+        print(self.prxDownloader)
+        #proxy = Orchestrator.communicator().stringToProxy(self.prxDownloader)
+        proxy = self.prxDownloader
 
         factory = TrawlNet.DownloaderFactoryPrx.checkedCast(proxy)
         downloader = factory.create()
@@ -72,7 +75,11 @@ class Orchestrator(Ice.Application):
         global miProxy
         global events
 
-        topic_mgr = self.get_topic_manager()
+        Orchestrator1.prxDownloader = self.communicator().stringToProxy("downloader_id_manual@DownloaderFactory.DownloaderAdapter")
+
+        topic_manager = self.communicator().stringToProxy("YoutubeDownloaderApp.IceStorm/TopicManager")
+        topic_mgr = IceStorm.TopicManagerPrx.checkedCast(topic_manager)
+
         if not topic_mgr:
             print("Invalid proxy")
             return 2
@@ -126,8 +133,8 @@ class Orchestrator(Ice.Application):
         return 0
 
 
-Orchestrator1.prxDownloader = sys.argv[2]
-Orchestrator1.prxTransfer = sys.argv[3]
+#Orchestrator1.prxDownloader = sys.argv[2]
+#Orchestrator1.prxTransfer = sys.argv[3]
 
 orchestrator = Orchestrator()
 sys.exit(orchestrator.main(sys.argv))

@@ -108,8 +108,6 @@ class Server(Ice.Application):
     def run(self, argv):
         print("probando")
         #Topic UpdateEvent
-        #topic_mgr = self.get_topic_manager()
-
         topic_manager = self.communicator().stringToProxy("YoutubeDownloaderApp.IceStorm/TopicManager")
         topic_mgr = IceStorm.TopicManagerPrx.checkedCast(topic_manager)
 
