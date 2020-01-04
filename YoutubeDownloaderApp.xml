@@ -99,6 +99,14 @@
             <adapter name="DownloaderAdapter" endpoints="tcp" id="${server}.DownloaderAdapter"/>
          </server>
       </node>
+      <node name="orchestrator-node">
+         <server id="OrchestratorServer" activation="manual" exe="./orchestrator.py" pwd="${application.distrib}">
+            <properties>
+               <property name="Ice.StdOut" value="${application.distrib}/server-out.txt"/>
+            </properties>
+            <adapter name="OrchestratorAdapter" endpoints="tcp" id="${server}.OrchestratorAdapter"/>
+         </server>
+      </node>
       <node name="registry-node">
          <server-instance template="IcePatch2" directory="/tmp/YoutubeDownloaderApp"/>
          <server-instance template="IceStorm"/>
