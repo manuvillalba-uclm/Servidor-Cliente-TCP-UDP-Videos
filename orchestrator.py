@@ -16,6 +16,8 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
     prxDownloader = None
 
     prxTransfer = None
+    miProxy = None
+    events = None
     def downloadTask(self, message, current=None):
         # comprobar primero que el fichero ya exista
         proxy = self.prxDownloader
@@ -41,12 +43,13 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
         anunciador = TrawlNet.OrchestratorPrx.checkedCast(me)
         if not anunciador:
             raise RuntimeError('Invalid proxy')
-        if not me == miProxy:
-            anunciador.announce(miProxy)
+
+        if not me == self.miProxy:
+            anunciador.announce(self.miProxy)
             sys.stdout.flush()
 
         for i in self.FileList:
-            events.newFile(i)
+            self.events.newFile(i)
 
     def announce(self, otro,current = None ):
         print("Encantado, soy {}".format(otro))
@@ -76,8 +79,7 @@ class Orchestrator(Ice.Application):
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):
-        global miProxy
-        global events
+
 
         Orchestrator1.prxDownloader = self.communicator().stringToProxy("downloaderFactory@DownloaderFactory.DownloaderAdapter")
 
@@ -92,13 +94,12 @@ class Orchestrator(Ice.Application):
         servant = Orchestrator1()
 
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
+        subscriber = adapter.addWithUUID(servant)
         #proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
 
         indirect_proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
         id_ = indirect_proxy.ice_getIdentity()
         proxy = adapter.createDirectProxy(id_)
-
-        subscriber = adapter.addWithUUID(servant)
 
         #CANAL UPDATE EVENTS
         topic_name1 = "UpdateEvents"
@@ -109,7 +110,7 @@ class Orchestrator(Ice.Application):
             topic1 = topic_mgr.create(topic_name1)
 
         publisher1 = topic1.getPublisher()
-        events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher1)
+        Orchestrator1.events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher1)
         topic1.subscribeAndGetPublisher(qos, subscriber)
         #print("Waiting UpadteEvents... '{}'".format(subscriber))
 
@@ -125,13 +126,14 @@ class Orchestrator(Ice.Application):
         sync = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisher2)
 
 
-        miProxy = TrawlNet.OrchestratorPrx.checkedCast(proxy)
+        Orchestrator1.miProxy = TrawlNet.OrchestratorPrx.checkedCast(proxy)
         topic2.subscribeAndGetPublisher(qos2, subscriber)
         #print("Waiting SyncEvents... '{}'".format(subscriber))
 
-        sync.hello(miProxy) #Saludar a los Orchestrator
+        sync.hello(Orchestrator1.miProxy) #Saludar a los Orchestrator
 
         print(proxy)
+        print(Orchestrator1.miProxy)
         sys.stdout.flush()
 
         adapter.activate()

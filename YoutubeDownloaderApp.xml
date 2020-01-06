@@ -128,7 +128,7 @@
          </server>
       </server-template>
       <replica-group id="OrchestratorReplicaGroup">
-         <load-balancing type="random" n-replicas="0"/>
+         <load-balancing type="random" n-replicas="1"/>
          <object identity="orchestrator" type="::Trawlnet::Orchestrator"/>
       </replica-group>
       <node name="downloads-node">
