@@ -14,14 +14,15 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
 
     FileList = []
     prxDownloader = None
-
     prxTransfer = None
     miProxy = None
     events = None
+
     def downloadTask(self, message, current=None):
         # comprobar primero que el fichero ya exista
         proxy = self.prxDownloader
-
+        print("ME LO HA MANDADO A MÍ")
+        sys.stdout.flush()
         factory = TrawlNet.DownloaderFactoryPrx.checkedCast(proxy)
         downloader = factory.create()
         val = downloader.addDownloadTask(message)
@@ -59,8 +60,7 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
         return self.FileList
 
     def getFile(self, name, current = None):
-        proxy = Orchestrator.communicator().stringToProxy(self.prxTransfer)
-        factory = TrawlNet.TransferFactoryPrx.checkedCast(proxy)
+        factory = TrawlNet.TransferFactoryPrx.checkedCast(self.prxTransfer)
         transfer = factory.create(name)
         return transfer
 
@@ -79,27 +79,39 @@ class Orchestrator(Ice.Application):
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):
-
-
+        #Conexión con el Factory Downloader
         Orchestrator1.prxDownloader = self.communicator().stringToProxy("downloaderFactory@DownloaderFactory.DownloaderAdapter")
-
+        Orchestrator1.prxTransfer = self.communicator().stringToProxy("transferFactory@TransferFactory.TransferAdapter")
+        #IceStorm
         topic_manager = self.communicator().stringToProxy("YoutubeDownloaderApp.IceStorm/TopicManager")
         topic_mgr = IceStorm.TopicManagerPrx.checkedCast(topic_manager)
-
         if not topic_mgr:
             print("Invalid proxy")
             return 2
 
         broker = self.communicator()
-        servant = Orchestrator1()
+
 
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
+
+
+        properties = broker.getProperties()
+        servant = Orchestrator1(properties.getProperty('Ice.ProgramName'))
         subscriber = adapter.addWithUUID(servant)
+        direct_subscriber = adapter.createDirectProxy(subscriber.ice_getIdentity())
+
+        id_ = properties.getProperty('Identity')
+        indirect_proxy = adapter.add(servant, broker.stringToIdentity(id_))
+
         #proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
 
-        indirect_proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
-        id_ = indirect_proxy.ice_getIdentity()
-        proxy = adapter.createDirectProxy(id_)
+        #indirect_proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
+
+        #indirect_proxy = adapter.addWithUUID(servant)
+        identidad = indirect_proxy.ice_getIdentity()
+        proxy = adapter.createDirectProxy(identidad)
+
+
 
         #CANAL UPDATE EVENTS
         topic_name1 = "UpdateEvents"
@@ -111,7 +123,9 @@ class Orchestrator(Ice.Application):
 
         publisher1 = topic1.getPublisher()
         Orchestrator1.events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher1)
-        topic1.subscribeAndGetPublisher(qos, subscriber)
+        topic1.subscribeAndGetPublisher(qos, direct_subscriber)
+
+
         #print("Waiting UpadteEvents... '{}'".format(subscriber))
 
         #CANAL ORCHESTRATOR SYNC
@@ -125,15 +139,14 @@ class Orchestrator(Ice.Application):
         publisher2 = topic2.getPublisher()
         sync = TrawlNet.OrchestratorEventPrx.uncheckedCast(publisher2)
 
-
         Orchestrator1.miProxy = TrawlNet.OrchestratorPrx.checkedCast(proxy)
-        topic2.subscribeAndGetPublisher(qos2, subscriber)
+        topic2.subscribeAndGetPublisher(qos2, direct_subscriber)
+
         #print("Waiting SyncEvents... '{}'".format(subscriber))
 
-        sync.hello(Orchestrator1.miProxy) #Saludar a los Orchestrator
-
+        sync.hello(Orchestrator1.miProxy) #Saludar a los otros Orchestrator
+        print(indirect_proxy)
         print(proxy)
-        print(Orchestrator1.miProxy)
         sys.stdout.flush()
 
         adapter.activate()

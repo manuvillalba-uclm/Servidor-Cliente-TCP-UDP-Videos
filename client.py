@@ -48,6 +48,7 @@ class Client(Ice.Application):
     def run(self, argv):
         #Compruebo el proxy
         proxy = self.communicator().stringToProxy(argv[1])
+
         self.orchestrator = TrawlNet.OrchestratorPrx.checkedCast(proxy)
         if not self.orchestrator:
             raise RuntimeError('Invalid proxy')
