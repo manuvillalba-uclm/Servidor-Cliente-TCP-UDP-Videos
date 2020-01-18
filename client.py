@@ -29,6 +29,13 @@ class Client(Ice.Application):
         except TrawlNet.TransferError as e:
             print(e.reason)
             return 1
+        except Exception as e:
+            print("El archivo no existe!, a continuación se mostrará la lista de archivos descargados actualmente:")
+            self.FileList = self.orchestrator.getFileList()
+            print(self.FileList)
+            sys.stdout.flush()
+            return 1
+
 
         with open(os.path.join(DOWNLOADS_DIRECTORY, file_name), 'wb') as file_:
             remote_EOF = False
@@ -67,10 +74,22 @@ class Client(Ice.Application):
         for opt, arg in opts:
             if opt == "--download":
                 print("DOWNLOAD")
+                sys.stdout.flush()
                 url = arg
-                print(self.orchestrator.downloadTask(url))
+                val = self.orchestrator.downloadTask(url)
+                if val.name == "REPETIDO" and val.hash == "":
+                    print("Este archivo ya está descargado en el Servidor")
+                    print("A continuación se mostrará la lista de archivos descargados actualmente:")
+                    self.FileList = self.orchestrator.getFileList()
+                    print(self.FileList)
+                    sys.stdout.flush()
+                else:
+                    print(val)
+                    sys.stdout.flush()
+
             elif opt == "--transfer":
                 print("TRANSFER")
+                sys.stdout.flush()
                 archivo = arg
                 self.transfer_request(archivo)
 

@@ -69,25 +69,34 @@ def computeHash(filename):
 class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
 
     events = None
-    n = 0
 
     def addDownloadTask(self, message, current=None):
-        print("Downloader {0}: {1}".format(self.n, message))
+        print("Downloader: {0}".format( message))
+        print(message[-11:])
         sys.stdout.flush()
-        self.n += 1
         filename = download_mp3(message, "./downloads/")
         val = TrawlNet.FileInfo()
-        val.name = filename
+
+        val.name = message[-11:] + " - " + filename[12:]
         val.hash = computeHash(filename)
         self.events.newFile(val)
-
         print(self.events)
         sys.stdout.flush()
 
         return val
 
+    def destroy(self, current):
+        try:
+            current.adapter.remove(current.id)
+            print('DOWNLOADER DESTROYED')
+            sys.stdout.flush()
+        except Exception as e:
+            print(e)
+            sys.stdout.flush()
+
 
 class DownloadFactory1(TrawlNet.DownloaderFactory):
+
     def create(self, current):
         servant = Download1()
         proxy = current.adapter.addWithUUID(servant)

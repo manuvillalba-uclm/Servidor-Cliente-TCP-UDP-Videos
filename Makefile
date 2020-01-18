@@ -16,13 +16,21 @@ run: clean
 	$(MAKE) run-orchestrator-node
 
 run-client-download:
-	echo "Añade la ejecución del cliente para realizar una descarga"
+ifeq ($(1),)
+	@echo "Pruebe con run-client-download 1 = <url>"
+else
+	python ./client.py --Ice.Config=locator.config "orchestrator" --download "$1"
+endif
 
 run-client-transfer:
-	echo "Añade la ejecución del cliente para realizar una transferencia"
+ifeq ($(1),)
+	@echo "Pruebe con run-client-transfer 1 = <nombre.mp3>"
+else
+	python ./client.py --Ice.Config=locator.config "orchestrator" --transfer "$1"
+endif
 
 run-client-list:
-	echo "Añade la ejecución del cliente para obtener la lista de canciones"
+	python ./client.py --Ice.Config=locator.config "orchestrator"
 
 run-registry-node: /tmp/db/registry /tmp/db/registry-node/servers 
 	icegridnode --Ice.Config=registry-node.config

@@ -3,8 +3,11 @@
 
 
 import sys
+from time import sleep
+
 import Ice
 import IceStorm
+import random
 Ice.loadSlice('trawlnet.ice')
 
 import TrawlNet
@@ -19,13 +22,25 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
     events = None
 
     def downloadTask(self, message, current=None):
-        # comprobar primero que el fichero ya exista
         proxy = self.prxDownloader
-        print("ME LO HA MANDADO A MÍ")
+        print("Me ha llegado una tarea de descarga!")
         sys.stdout.flush()
-        factory = TrawlNet.DownloaderFactoryPrx.checkedCast(proxy)
-        downloader = factory.create()
-        val = downloader.addDownloadTask(message)
+        #Con url_id podemos comprobar los que están en la lista antes de meterlo
+        url_id = message[-11:]
+        repetido = False
+        for i in self.FileList:
+            if i.name[:11] == url_id:
+                repetido = True
+
+        if not repetido:
+            factory = TrawlNet.DownloaderFactoryPrx.checkedCast(proxy)
+            downloader = factory.create()
+            val = downloader.addDownloadTask(message)
+            downloader.destroy()
+        else:
+            val = TrawlNet.FileInfo()
+            val.name = "REPETIDO"
+            val.hash = ""
 
         return val
 
@@ -40,7 +55,6 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
     def hello (self, me, current = None):
         print("Hola a todos, soy {}".format(me))
         sys.stdout.flush()
-        
         anunciador = TrawlNet.OrchestratorPrx.checkedCast(me)
         if not anunciador:
             raise RuntimeError('Invalid proxy')
@@ -79,6 +93,7 @@ class Orchestrator(Ice.Application):
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
     def run(self, argv):
+        sleep(random.uniform(0, 10))
         #Conexión con el Factory Downloader
         Orchestrator1.prxDownloader = self.communicator().stringToProxy("downloaderFactory@DownloaderFactory.DownloaderAdapter")
         Orchestrator1.prxTransfer = self.communicator().stringToProxy("transferFactory@TransferFactory.TransferAdapter")
@@ -144,6 +159,7 @@ class Orchestrator(Ice.Application):
 
         #print("Waiting SyncEvents... '{}'".format(subscriber))
 
+
         sync.hello(Orchestrator1.miProxy) #Saludar a los otros Orchestrator
         print(indirect_proxy)
         print(proxy)
@@ -153,8 +169,8 @@ class Orchestrator(Ice.Application):
         self.shutdownOnInterrupt()
         broker.waitForShutdown()
 
-        topic1.unsubscribe(subscriber)
-        topic2.unsubscribe(subscriber)
+        topic1.unsubscribe(direct_subscriber)
+        topic2.unsubscribe(direct_subscriber)
 
         return 0
 
