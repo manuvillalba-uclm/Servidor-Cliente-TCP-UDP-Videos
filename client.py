@@ -23,8 +23,8 @@ import Ice
 
 
 Ice.loadSlice('trawlnet.ice')
-# desctivamos porque import TrawlNet funciona correctamente pero sólo después de hacer
-# Ice.loadSlice('trawlnet.ice')
+# desctivamos porque import TrawlNet funciona correctamente pero sólo después de
+# hacer Ice.loadSlice('trawlnet.ice')
 
 # pylint: disable=E0401,C0413
 import TrawlNet

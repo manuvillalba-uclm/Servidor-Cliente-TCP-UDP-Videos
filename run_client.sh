@@ -1,8 +1,13 @@
 #!/bin/sh
 #
+echo "Se realiza una descarga, "
+echo "Downloading audio..."
+./client.py --Ice.Config=client.config "orchestrator" --download "$1"
 
-PYTHON=python3
+echo ""
+echo "List request..."
+./client.py --Ice.Config=client.config "orchestrator"
 
-CLIENT_CONFIG=server.config
-
-$PYTHON client.py --Ice.Config=$CLIENT_CONFIG "$1" "$2"
+echo ""
+echo "Init transfer..."
+./client.py --Ice.Config=client.config "orchestrator" --transfer "$2"
