@@ -26,7 +26,7 @@ except ImportError:
     print('ERROR: do you have installed youtube-dl library?')
     sys.exit(1)
 # Desactivamos porque es material suministrado por los profesores
-#  pylint: disable=missing-docstring, old-style-class, no-init
+#  pylint: disable=missing-docstring,E0012, no-init
 class NullLogger:
     def debug(self, msg):
         pass

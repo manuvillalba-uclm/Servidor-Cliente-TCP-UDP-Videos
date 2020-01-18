@@ -48,7 +48,7 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent,
                 Envía una URL al Downloader.
         """
         proxy = self.prxDownloader
-        print("Me ha llegado una tarea de descarga!")
+        print("Me ha llegado una tarea de DOWNLOAD")
         sys.stdout.flush()
 
         #Con url_id podemos comprobar los que están en la lista antes de meterlo
@@ -125,7 +125,8 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent,
 
                Método para pasase la lista de archivos descargados
         """
-        print ("Me ha llegado una tarea para devolver mi LISTA DE ARCHIVOS")
+        print("Me ha llegado una tarea para devolver mi LISTA")
+        sys.stdout.flush()
         return self.FileList
 
     def getFile(self, name, current=None):
@@ -135,7 +136,8 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent,
 
                Método para pasar el archivo de audio del vídeo.
         """
-        print ("Me ha llegado una tarea para hacer una TRANSFER")
+        print("Me ha llegado una tarea para hacer una TRANSFER")
+        sys.stdout.flush()
         factory = TrawlNet.TransferFactoryPrx.checkedCast(self.prxTransfer)
         transfer = factory.create(name)
         return transfer
@@ -235,8 +237,8 @@ class Orchestrator(Ice.Application):
         #SALUDAR
         # Saludar a los otros Orchestrator
         sync.hello(Orchestrator1.miProxy)
-        print("Indidect:" + indirect_proxy)
-        print("Direct" + proxy)
+        print(indirect_proxy)
+        print(proxy)
         sys.stdout.flush()
 
         adapter.activate()
