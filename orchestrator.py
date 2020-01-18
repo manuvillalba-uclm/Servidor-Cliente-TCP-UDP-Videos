@@ -1,30 +1,56 @@
 #!/usr/bin/python -u
 # -*- coding: utf-8 -*-
+"""orchestrator.py
+Creado por Manuel Villalba y Luis Pajarero
+Sistemas Distribuidos 2019/2020
 
+Utilizado para asignar tareas al Downloader, está subscrito a dos canales:
+    - OrchestratorSync
+    - UpdateEvents
 
+Se encarga de mantener una lista de los ficheros que se han descargado en el servidor.
+"""
 import sys
 from time import sleep
-
+import random
 import Ice
 import IceStorm
-import random
 Ice.loadSlice('trawlnet.ice')
-
+# desctivamos porque import TrawlNet funciona correctamente pero sólo después de hacer
+# Ice.loadSlice('trawlnet.ice')
+# pylint: disable=E0401,C0413, unused-argument
 import TrawlNet
 
 
-class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.UpdateEvent, Ice.Application):
+class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent,
+                    TrawlNet.UpdateEvent, Ice.Application):
+    """clase Orchestrator1
+        Creado por Manuel Villalba y Luis Pajarero
+        Sistemas Distribuidos 2019/2020
 
+        Clase principal de Orchestrator
+
+        Contiene todas las funciones y acciones que realiza el Orchestrator.
+        """
     FileList = []
     prxDownloader = None
     prxTransfer = None
     miProxy = None
     events = None
 
+    # Desactivamos que el nombre sea inválido porque nos ha sido proporcionado por los profesores
+    # pylint: disable=invalid-name
     def downloadTask(self, message, current=None):
+        """método donwloadTask
+                Creado por Manuel Villalba y Luis Pajarero
+                Sistemas Distribuidos 2019/2020
+
+                Envía una URL al Downloader.
+        """
         proxy = self.prxDownloader
         print("Me ha llegado una tarea de descarga!")
         sys.stdout.flush()
+
         #Con url_id podemos comprobar los que están en la lista antes de meterlo
         url_id = message[-11:]
         repetido = False
@@ -44,7 +70,13 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
 
         return val
 
-    def newFile(self,val,current=None):
+    def newFile(self, val, current=None):
+        """método newFile
+                Creado por Manuel Villalba y Luis Pajarero
+                Sistemas Distribuidos 2019/2020
+
+                Método para pasar los archivos a los demás Orchestrator.
+        """
         if val not in self.FileList:
             print("Me ha llegado por subcripcion {0}, {1}".format(val.name, val.hash))
             sys.stdout.flush()
@@ -52,7 +84,14 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
             print(self.FileList)
             sys.stdout.flush()
 
-    def hello (self, me, current = None):
+    def hello(self, me, current=None):
+        """método hello
+               Creado por Manuel Villalba y Luis Pajarero
+               Sistemas Distribuidos 2019/2020
+
+               Este método manda su proxy a todos los Orchestrator del canal
+               Simula un "Saludo".
+        """
         print("Hola a todos, soy {}".format(me))
         sys.stdout.flush()
         anunciador = TrawlNet.OrchestratorPrx.checkedCast(me)
@@ -66,22 +105,61 @@ class Orchestrator1(TrawlNet.Orchestrator, TrawlNet.OrchestratorEvent, TrawlNet.
         for i in self.FileList:
             self.events.newFile(i)
 
-    def announce(self, otro,current = None ):
+    # Desactivamos porque en la especificación de la práctica es así
+    # pylint: disable=no-self-use
+    def announce(self, otro, current=None):
+        """método newFile
+               Creado por Manuel Villalba y Luis Pajarero
+               Sistemas Distribuidos 2019/2020
+
+               Cuando le llega un hello de otro Orchestrator, este método
+               le devuelve al que saluda su proxy, para que se conozcan.
+       """
         print("Encantado, soy {}".format(otro))
         sys.stdout.flush()
 
-    def getFileList(self, current = None):
+    def getFileList(self, current=None):
+        """método newFile
+               Creado por Manuel Villalba y Luis Pajarero
+               Sistemas Distribuidos 2019/2020
+
+               Método para pasase la lista de archivos descargados
+        """
+        print ("Me ha llegado una tarea para devolver mi LISTA DE ARCHIVOS")
         return self.FileList
 
-    def getFile(self, name, current = None):
+    def getFile(self, name, current=None):
+        """método newFile
+               Creado por Manuel Villalba y Luis Pajarero
+               Sistemas Distribuidos 2019/2020
+
+               Método para pasar el archivo de audio del vídeo.
+        """
+        print ("Me ha llegado una tarea para hacer una TRANSFER")
         factory = TrawlNet.TransferFactoryPrx.checkedCast(self.prxTransfer)
         transfer = factory.create(name)
         return transfer
 
 
+# Desactivado porque lo tenemos que usar
+# pylint: disable=no-member
 class Orchestrator(Ice.Application):
+    """Clase Orchestrator
+           Creado por Manuel Villalba y Luis Pajarero
+           Sistemas Distribuidos 2019/2020
 
+           Clase que ejecuta el Orchestrator, en esta clase se forma la lógica del programa
+            - Se subscribe a los dos canales
+            - Se realiza el hello
+
+    """
     def get_topic_manager(self):
+        """Clase Orchestrator
+               Creado por Manuel Villalba y Luis Pajarero
+               Sistemas Distribuidos 2019/2020
+
+               Método que obtiene el proxy del topic
+        """
         key = 'IceStorm.TopicManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
         if proxy is None:
@@ -89,26 +167,32 @@ class Orchestrator(Ice.Application):
             sys.stdout.flush()
             return None
 
-        #print("Using IceStorm in: '%s'" % key)
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
+    #Le tengo que pasar los argumentos de alguna forma y necesitamos bastantes variables
+    # en este caso..
+    # pylint: disable=W0221, too-many-locals
     def run(self, argv):
+        # Debido a fallos con IceGrid al iniciar varios orchestrator a la vez creemos que
+        # se producen bloqueos interos, que no ocurren si cada orchestrator se inicia en
+        # un tiempo diferente
         sleep(random.uniform(0, 10))
         #Conexión con el Factory Downloader
-        Orchestrator1.prxDownloader = self.communicator().stringToProxy("downloaderFactory@DownloaderFactory.DownloaderAdapter")
-        Orchestrator1.prxTransfer = self.communicator().stringToProxy("transferFactory@TransferFactory.TransferAdapter")
+        Orchestrator1.prxDownloader = self.communicator().stringToProxy(
+            "downloaderFactory@DownloaderFactory.DownloaderAdapter")
+        Orchestrator1.prxTransfer = self.communicator().stringToProxy(
+            "transferFactory@TransferFactory.TransferAdapter")
         #IceStorm
-        topic_manager = self.communicator().stringToProxy("YoutubeDownloaderApp.IceStorm/TopicManager")
+        topic_manager = self.communicator().stringToProxy(
+            "YoutubeDownloaderApp.IceStorm/TopicManager")
         topic_mgr = IceStorm.TopicManagerPrx.checkedCast(topic_manager)
+
         if not topic_mgr:
             print("Invalid proxy")
             return 2
 
         broker = self.communicator()
-
-
         adapter = broker.createObjectAdapter("OrchestratorAdapter")
-
 
         properties = broker.getProperties()
         servant = Orchestrator1(properties.getProperty('Ice.ProgramName'))
@@ -118,15 +202,8 @@ class Orchestrator(Ice.Application):
         id_ = properties.getProperty('Identity')
         indirect_proxy = adapter.add(servant, broker.stringToIdentity(id_))
 
-        #proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
-
-        #indirect_proxy = adapter.add(servant, broker.stringToIdentity("orchestrator"))
-
-        #indirect_proxy = adapter.addWithUUID(servant)
         identidad = indirect_proxy.ice_getIdentity()
         proxy = adapter.createDirectProxy(identidad)
-
-
 
         #CANAL UPDATE EVENTS
         topic_name1 = "UpdateEvents"
@@ -140,8 +217,6 @@ class Orchestrator(Ice.Application):
         Orchestrator1.events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher1)
         topic1.subscribeAndGetPublisher(qos, direct_subscriber)
 
-
-        #print("Waiting UpadteEvents... '{}'".format(subscriber))
 
         #CANAL ORCHESTRATOR SYNC
         topic_name2 = "OrchestratorSync"
@@ -157,12 +232,11 @@ class Orchestrator(Ice.Application):
         Orchestrator1.miProxy = TrawlNet.OrchestratorPrx.checkedCast(proxy)
         topic2.subscribeAndGetPublisher(qos2, direct_subscriber)
 
-        #print("Waiting SyncEvents... '{}'".format(subscriber))
-
-
-        sync.hello(Orchestrator1.miProxy) #Saludar a los otros Orchestrator
-        print(indirect_proxy)
-        print(proxy)
+        #SALUDAR
+        # Saludar a los otros Orchestrator
+        sync.hello(Orchestrator1.miProxy)
+        print("Indidect:" + indirect_proxy)
+        print("Direct" + proxy)
         sys.stdout.flush()
 
         adapter.activate()
@@ -175,8 +249,5 @@ class Orchestrator(Ice.Application):
         return 0
 
 
-#Orchestrator1.prxDownloader = sys.argv[2]
-#Orchestrator1.prxTransfer = sys.argv[3]
-
-orchestrator = Orchestrator()
-sys.exit(orchestrator.main(sys.argv))
+ORCHESTRATOR = Orchestrator()
+sys.exit(ORCHESTRATOR.main(sys.argv))

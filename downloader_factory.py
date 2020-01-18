@@ -1,13 +1,23 @@
 #!/usr/bin/python -u
 # -*- coding: utf-8 -*-
+"""download_factory.py
+Creado por Manuel Villalba y Luis Pajarero
+Sistemas Distribuidos 2019/2020
+
+Utilizado para crear Downloaders, como su nombre indica.
+Cuando un Downloader acaba, este es destruido.
+"""
 import os
 import sys
+import hashlib
 import Ice
 import IceStorm
-import hashlib
+
 
 Ice.loadSlice('trawlnet.ice')
-
+# desctivamos porque import TrawlNet funciona correctamente pero sólo después de hacer
+# Ice.loadSlice('trawlnet.ice')
+# pylint: disable=E0401,C0413, unused-argument
 import TrawlNet
 
 try:
@@ -15,8 +25,8 @@ try:
 except ImportError:
     print('ERROR: do you have installed youtube-dl library?')
     sys.exit(1)
-
-
+# Desactivamos porque es material suministrado por los profesores
+#  pylint: disable=missing-docstring, old-style-class, no-init
 class NullLogger:
     def debug(self, msg):
         pass
@@ -56,7 +66,8 @@ def download_mp3(url, destination='./'):
     filename = filename[:filename.rindex('.') + 1]
     return filename + options['postprocessors'][0]['preferredcodec']
 
-
+# Desactivamos porque es material suministrado por los profesores
+#  pylint: disable=invalid-name
 def computeHash(filename):
     '''SHA256 hash of a file'''
     fileHash = hashlib.sha256()
@@ -71,8 +82,7 @@ class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
     events = None
 
     def addDownloadTask(self, message, current=None):
-        print("Downloader: {0}".format( message))
-        print(message[-11:])
+        print("Downloader: {0}".format(message))
         sys.stdout.flush()
         filename = download_mp3(message, "./downloads/")
         val = TrawlNet.FileInfo()
@@ -85,6 +95,8 @@ class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
 
         return val
 
+    # Desactivamos porque no es necesario especificar la expcepcion
+    #  pylint: disable=broad-except, no-self-use
     def destroy(self, current):
         try:
             current.adapter.remove(current.id)
@@ -95,8 +107,11 @@ class Download1(TrawlNet.Downloader, TrawlNet.UpdateEvent):
             sys.stdout.flush()
 
 
+# Desactivamos porque no entendemos la razon
+# pylint: disable=too-few-public-methods
 class DownloadFactory1(TrawlNet.DownloaderFactory):
-
+    # Desactivamos porque está especificado así en la práctica
+    # pylint: disable=no-self-use
     def create(self, current):
         servant = Download1()
         proxy = current.adapter.addWithUUID(servant)
@@ -107,7 +122,8 @@ class DownloadFactory1(TrawlNet.DownloaderFactory):
 
 
 class Server(Ice.Application):
-
+    # Desactivado porque lo tenemos que usar
+    # pylint: disable=no-member
     def get_topic_manager(self):
         key = 'IceStorm.TopicManager.Proxy'
         proxy = self.communicator().propertyToProxy(key)
@@ -118,9 +134,13 @@ class Server(Ice.Application):
         #print("Using IceStorm in: '%s'" % key)
         return IceStorm.TopicManagerPrx.checkedCast(proxy)
 
+    # Le tengo que pasar los argumentos de alguna forma y necesitamos bastantes variables
+    # en este caso..
+    # pylint: disable=W0221, too-many-locals
     def run(self, argv):
         #Topic UpdateEvent
-        topic_manager = self.communicator().stringToProxy("YoutubeDownloaderApp.IceStorm/TopicManager")
+        topic_manager = self.communicator().stringToProxy(
+            "YoutubeDownloaderApp.IceStorm/TopicManager")
         topic_mgr = IceStorm.TopicManagerPrx.checkedCast(topic_manager)
 
         if not topic_mgr:
@@ -135,7 +155,6 @@ class Server(Ice.Application):
             topic = topic_mgr.create(topic_name)
 
         publisher = topic.getPublisher()
-        
         Download1.events = TrawlNet.UpdateEventPrx.uncheckedCast(publisher)
 
         #Proxy directo
