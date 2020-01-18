@@ -17,20 +17,20 @@ run: clean
 
 run-client-download:
 ifeq ($(1),)
-	@echo "Pruebe con run-client-download 1 = <url>"
+	@echo "Pruebe con make run-client-download 1=<url>"
 else
-	python ./client.py --Ice.Config=locator.config "orchestrator" --download "$1"
+	python ./client.py --Ice.Config=client.config "orchestrator" --download "$1"
 endif
 
 run-client-transfer:
 ifeq ($(1),)
-	@echo "Pruebe con run-client-transfer 1 = <nombre.mp3>"
+	@echo "Pruebe con make run-client-transfer 1=<nombre.mp3>"
 else
-	python ./client.py --Ice.Config=locator.config "orchestrator" --transfer "$1"
+	python ./client.py --Ice.Config=client.config "orchestrator" --transfer "$1"
 endif
 
 run-client-list:
-	python ./client.py --Ice.Config=locator.config "orchestrator"
+	python ./client.py --Ice.Config=client.config "orchestrator"
 
 run-registry-node: /tmp/db/registry /tmp/db/registry-node/servers 
 	icegridnode --Ice.Config=registry-node.config
@@ -43,7 +43,7 @@ run-downloads-node: /tmp/db/downloads-node/servers
 
 app-workspace: /tmp/YoutubeDownloaderApp
 	cp trawlnet.ice orchestrator.py downloader_factory.py \
-	transfer_factory.py utils.py /tmp/YoutubeDownloaderApp
+	transfer_factory.py /tmp/YoutubeDownloaderApp
 	icepatch2calc /tmp/YoutubeDownloaderApp
 
 /tmp/%:
